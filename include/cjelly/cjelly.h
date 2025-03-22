@@ -218,19 +218,6 @@ typedef enum {
 } CJellyUpdateMode;
 
 /**
- * @brief Specifies the update mode for a CJelly window.
- *
- * This enumeration defines the different strategies for updating the window's content.
- * Depending on the chosen mode, the window can redraw continuously synchronized to VSync,
- * at a fixed frame rate, or only when an event indicates that a redraw is necessary.
- */
-typedef enum {
-  CJELLY_UPDATE_MODE_VSYNC,       /**< Redraw is synchronized with the display's refresh rate via VSync. */
-  CJELLY_UPDATE_MODE_FIXED,       /**< Redraw at a fixed frame rate specified by the fixedFramerate field. */
-  CJELLY_UPDATE_MODE_EVENT_DRIVEN /**< Redraw only when explicitly marked as needing an update. */
-} CJellyUpdateMode;
-
-/**
  * @brief Represents a window and its associated Vulkan resources in the CJelly framework.
  *
  * The CJellyWindow struct encapsulates both the OS-specific window handle and all the Vulkan
