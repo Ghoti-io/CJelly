@@ -5,6 +5,13 @@
 
 #include <cjelly/format/3d/obj.h>
 
+
+// Reference documents:
+// https://en.wikipedia.org/wiki/Wavefront_.obj_file
+// https://paulbourke.net/dataformats/obj/
+// https://paulbourke.net/dataformats/obj/obj_spec.pdf
+
+
 #define LINE_SIZE 256
 
 

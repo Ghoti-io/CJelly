@@ -1,0 +1,155 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <cjelly/format/image.h>
+
+CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyImage * * out_image) {
+  *out_image = NULL;
+
+  CJellyFormatImageType type;
+  CJellyFormatImageError err = cjelly_format_image_detect_type(filename, &type);
+  if (err != CJELLY_FORMAT_IMAGE_SUCCESS) return err;
+
+  // Allocate memory for the image structure.
+  CJellyImage * image = (CJellyImage *)malloc(sizeof(CJellyImage));
+  if (!image) return CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY;
+
+  // Initialize the image structure.
+  *image = (CJellyImage){0};
+
+  // Copy the filename.
+  size_t len = strlen(filename);
+  image->name = (unsigned char *)malloc(len + 1);
+  if (!image->name) goto ERROR_IMAGE_CLEANUP;
+  memcpy(image->name, filename, len + 1);
+ 
+  image->type = type;
+
+  switch (type) {
+    case CJELLY_FORMAT_IMAGE_BMP:
+      //err = cjelly_format_image_bmp_load(filename, (CJellyImageBmp *)image);
+      break;
+    default:
+      err = CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT;
+      goto ERROR_NAME_CLEANUP;
+  }
+
+  *out_image = image;
+  return CJELLY_FORMAT_IMAGE_SUCCESS;
+
+ERROR_NAME_CLEANUP:
+  free(image->name);
+
+ERROR_IMAGE_CLEANUP:
+  free(image);
+  if (err == CJELLY_FORMAT_IMAGE_SUCCESS) {
+    err = CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY;
+  }
+  return err;
+}
+
+
+void cjelly_format_image_free(CJellyImage * image) {
+  if (!image) return;
+
+  switch (image->type) {
+    case CJELLY_FORMAT_IMAGE_BMP:
+      //cjelly_format_image_bmp_free((CJellyImageBmp *)image);
+      break;
+    default:
+      break;
+  }
+  free(image->name);
+  free(image);
+}
+
+
+/**
+ * @brief Structure for holding image signature information.
+ *
+ * This structure is a helper struct that is only used in the
+ * cjelly_format_image_detect_type function.
+ */ 
+typedef struct {
+  CJellyFormatImageType type;      /**< The image type associated with the signature */
+  const unsigned char * signature; /**< Pointer to the signature bytes */
+  size_t length;                   /**< Number of bytes in the signature */
+} ImageSignature;  
+
+
+CJellyFormatImageError cjelly_format_image_detect_type(const char * path, CJellyFormatImageType * out_type) {
+  *out_type = CJELLY_FORMAT_IMAGE_UNKNOWN;
+
+  if (!path || !out_type) {
+      // Invalid arguments; for simplicity, return an invalid format error.
+      return CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT;
+  }
+
+  FILE *fp = fopen(path, "rb");
+  if (!fp) {
+    return CJELLY_FORMAT_IMAGE_ERR_FILE_NOT_FOUND;
+  }
+
+  // Define known image signatures.
+  static const unsigned char bmp_signature[] = {'B', 'M'};
+  // static const unsigned char png_signature[] = {0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+  // static const unsigned char jpg_signature[] = {0xFF, 0xD8, 0xFF};
+
+  ImageSignature signatures[] = {
+    { CJELLY_FORMAT_IMAGE_BMP, bmp_signature, sizeof(bmp_signature) },
+    // { CJELLY_FORMAT_IMAGE_PNG, png_signature, sizeof(png_signature) },
+    // { CJELLY_FORMAT_IMAGE_JPG, jpg_signature, sizeof(jpg_signature) },
+  };
+
+  // Determine the maximum signature length required.
+  size_t max_sig_length = 0;
+  size_t num_signatures = sizeof(signatures) / sizeof(signatures[0]);
+  for (size_t i = 0; i < num_signatures; i++) {
+    if (signatures[i].length > max_sig_length) {
+      max_sig_length = signatures[i].length;
+    }
+  }
+
+  // Allocate a buffer to read the header.
+  unsigned char * buffer = (unsigned char *)malloc(max_sig_length);
+  if (!buffer) {
+    fclose(fp);
+    return CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY;
+  }
+
+  // Read the required number of bytes.
+  size_t bytes_read = fread(buffer, sizeof(unsigned char), max_sig_length, fp);
+  fclose(fp);
+  if (bytes_read) {
+    // Iterate over each known signature and check for a match.
+    for (size_t i = 0; i < num_signatures; i++) {
+      if ((bytes_read >= signatures[i].length) && !memcmp(buffer, signatures[i].signature, signatures[i].length)) {
+        *out_type = signatures[i].type;
+        free(buffer);
+        return CJELLY_FORMAT_IMAGE_SUCCESS;
+      }
+    }
+  }
+
+  free(buffer);
+  return CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT;
+}
+
+
+const char * cjelly_format_image_strerror(CJellyFormatImageError err) {
+  switch (err) {
+    case CJELLY_FORMAT_IMAGE_SUCCESS:
+      return "No error";
+    case CJELLY_FORMAT_IMAGE_ERR_FILE_NOT_FOUND:
+      return "OBJ file not found";
+    case CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY:
+      return "Out of memory";
+    case CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT:
+      return "Invalid OBJ file format";
+    case CJELLY_FORMAT_IMAGE_ERR_IO:
+      return "I/O error when reading/writing the OBJ file";
+    default:
+      return "Unknown error";
+  }
+}

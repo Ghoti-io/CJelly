@@ -1,9 +1,11 @@
 #ifndef CJELLY_FORMAT_3D_MTL_H
 #define CJELLY_FORMAT_3D_MTL_H
 
+#include <cjelly/macros.h>
+
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif // __cplusplus  
 
 /**
  * @file mtl.h
@@ -30,7 +32,7 @@ typedef enum {
  * This structure contains common material properties such as ambient, diffuse,
  * and specular colors, as well as the specular exponent and illumination model.
  */
-typedef struct CJellyFormat3dMtlMaterial {
+struct CJellyFormat3dMtlMaterial {
     char name[128];  /**< Name of the material */
     float Ka[3];     /**< Ambient color (RGB) */
     float Kd[3];     /**< Diffuse color (RGB) */
@@ -38,7 +40,7 @@ typedef struct CJellyFormat3dMtlMaterial {
     float Ns;        /**< Specular exponent */
     float d;         /**< Dissolve (transparency) */
     int illum;       /**< Illumination model */
-} CJellyFormat3dMtlMaterial;
+};
 
 /**
  * @brief Structure representing a material file.
@@ -46,10 +48,10 @@ typedef struct CJellyFormat3dMtlMaterial {
  * This structure contains an array of CJellyFormat3dMtlMaterial structures and
  * the number of materials in the library.
  */
-typedef struct CJellyFormat3dMtl {
+struct CJellyFormat3dMtl {
     CJellyFormat3dMtlMaterial * materials;  /**< Array of materials */
     int material_count;                    /**< Number of materials */
-} CJellyFormat3dMtl;
+};
 
 /**
  * @brief Loads materials from an MTL file.

@@ -1,10 +1,27 @@
 #ifndef CJELLY_MACROS_H
 #define CJELLY_MACROS_H
 
+#include <cjelly/libver.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
+/**
+ * Typedef prototypes.
+ */
+typedef struct CJellyImageRaw CJellyImageRaw;
+typedef struct CJellyImage CJellyImage;
+typedef struct CJellyFormat3dMtlMaterial CJellyFormat3dMtlMaterial;
+typedef struct CJellyFormat3dMtl CJellyFormat3dMtl;
+typedef struct CJellyFormat3dObjVertex CJellyFormat3dObjVertex;
+typedef struct CJellyFormat3dObjTexCoord CJellyFormat3dObjTexCoord;
+typedef struct CJellyFormat3dObjNormal CJellyFormat3dObjNormal;
+typedef struct CJellyFormat3dObjFaceOverflow CJellyFormat3dObjFaceOverflow;
+typedef struct CJellyFormat3dObjFace CJellyFormat3dObjFace;
+typedef struct CJellyFormat3dObjGroup CJellyFormat3dObjGroup;
+typedef struct CJellyFormat3dObjMaterialMapping CJellyFormat3dObjMaterialMapping;
+typedef struct CJellyFormat3dObjModel CJellyFormat3dObjModel;
 
 /**
  * A cross-compiler macro for marking a function parameter as unused.

@@ -114,6 +114,8 @@ INCLUDE := -I include/cjelly -I include/ -I $(GEN_DIR)/
 LIBOBJECTS := \
 	$(OBJ_DIR)/format/3d/mtl.o \
 	$(OBJ_DIR)/format/3d/obj.o \
+	$(OBJ_DIR)/format/image.o \
+	$(OBJ_DIR)/format/image/bmp.o \
 	$(OBJ_DIR)/cjelly.o
 
 
@@ -155,6 +157,12 @@ DEP_FORMAT_3D_MTL = \
 DEP_FORMAT_3D_OBJ = \
 	include/cjelly/format/3d/obj.h \
 	$(DEP_FORMAT_3D_MTL)
+DEP_FORMAT_IMAGE = \
+	include/cjelly/format/image.h \
+	$(DEP_MACROS)
+DEP_FORMAT_IMAGE_BMP = \
+	include/cjelly/format/image/bmp.h \
+	$(DEP_MACROS)
 
 DEP_CJELLY = \
 	include/cjelly/cjelly.h \
@@ -178,6 +186,16 @@ $(OBJ_DIR)/format/3d/obj.o: \
 	src/format/3d/obj.c \
 	$(DEP_FORMAT_3D_OBJ)
 
+$(OBJ_DIR)/format/image.o: \
+	src/format/image.c \
+	$(DEP_FORMAT_IMAGE) \
+	$(DEP_FORMAT_IMAGE_BMP) \
+	$(DEP_MACROS)
+
+$(OBJ_DIR)/format/image/bmp.o: \
+	src/format/image/bmp.c \
+	$(DEP_MACROS)
+
 $(OBJ_DIR)/cjelly.o: \
 	src/cjelly.c \
 	$(GEN_DIR)/shaders/basic.vert.h \
@@ -189,6 +207,7 @@ $(OBJ_DIR)/cjelly.o: \
 # Shaders
 ####################################################################
 
+# Automatically gather all files under the src/shaders/ directory (recursively)
 $(APP_DIR)/shaders/%.spv: \
 		src/shaders/%
 	@printf "\n### Compiling $@ ###\n"
@@ -199,12 +218,14 @@ $(APP_DIR)/shaders/%.spv: \
 # Replace dots with underscores.
 VAR_NAME = $(subst .,_, $(notdir $<))
 
+# Pattern rule to generate a header file from a SPIR-V file.
 $(GEN_DIR)/shaders/%.h: $(APP_DIR)/shaders/%.spv
 	@printf "\n### Generating $@ ###\n"
 	@mkdir -p $(@D)
 	xxd -i $< \
 	  | sed "s/^\(unsigned char \)[^[]*\(\[.*\)/\1$(VAR_NAME)\2/" \
 	  | sed "s/^\(unsigned int \)[^ ]*/\1$(VAR_NAME)_len/" > $@
+
 
 ####################################################################
 # Shared Library

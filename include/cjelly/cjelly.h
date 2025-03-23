@@ -45,6 +45,8 @@
 #include <stddef.h>    // For size_t and offsetof
 #include <vulkan/vulkan.h>
 
+#include <cjelly/macros.h>
+
 
 #ifdef __cplusplus
 extern "C" {

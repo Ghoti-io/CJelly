@@ -1,9 +1,12 @@
 #ifndef CJELLY_FORMAT_3D_OBJ_H
 #define CJELLY_FORMAT_3D_OBJ_H
 
+#include <cjelly/macros.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+
 
 #define CJELLY_FORMAT_3D_OBJ_MAX_NAME_LENGTH 128
 
@@ -29,28 +32,28 @@ typedef enum {
 /**
  * @brief Structure representing a 3D vertex.
  */
-typedef struct {
+struct CJellyFormat3dObjVertex {
   float x; /**< X coordinate */
   float y; /**< Y coordinate */
   float z; /**< Z coordinate */
-} CJellyFormat3dObjVertex;
+};
 
 /**
  * @brief Structure representing a 2D texture coordinate.
  */
-typedef struct {
+struct CJellyFormat3dObjTexCoord {
   float u; /**< U coordinate */
   float v; /**< V coordinate */
-} CJellyFormat3dObjTexCoord;
+};
 
 /**
  * @brief Structure representing a vertex normal.
  */
-typedef struct {
+struct CJellyFormat3dObjNormal {
   float x; /**< X component of the normal */
   float y; /**< Y component of the normal */
   float z; /**< Z component of the normal */
-} CJellyFormat3dObjNormal;
+};
 
 /**
  * @brief Structure for holding overflow information for a face.
@@ -59,11 +62,11 @@ typedef struct {
  * some faces may have more than four vertices. This structure is used to store
  * overflow information for faces with more than four vertices.
  */
-typedef struct {
+struct CJellyFormat3dObjFaceOverflow {
   int vertex;    /**< Vertex index (0-based) */
   int texcoord;  /**< Texture coordinate index (0-based or -1 if missing) */
   int normal;    /**< Normal index (0-based or -1 if missing) */
-} CJellyFormat3dObjFaceOverflow;
+};
 
 /**
  * @brief Structure representing a face in the OBJ model.
@@ -73,25 +76,25 @@ typedef struct {
  * the face.  The material_index field indicates the index of the material used
  * for this face, or -1 if no material is assigned.
  */
-typedef struct {
+struct CJellyFormat3dObjFace {
   int vertex[4];      /**< Vertex indices (0-based) */
   int texcoord[4];    /**< Texture coordinate indices (0-based or -1 if missing) */
   int normal[4];      /**< Normal indices (0-based or -1 if missing) */
   int count;          /**< Number of vertices in the face */
   int material_index; /**< Index into the material array, or -1 if no material assigned */
   CJellyFormat3dObjFaceOverflow * overflow; /**< Overflow information for faces with more than four vertices */
-} CJellyFormat3dObjFace;
+};
 
 /**
  * @brief Structure representing a group or object in the OBJ model.
  *
  * Groups help organize subsets of faces within the model.
  */
-typedef struct {
+struct CJellyFormat3dObjGroup {
   char name[CJELLY_FORMAT_3D_OBJ_MAX_NAME_LENGTH]; /**< Group or object name */
   int start_face;     /**< Index of the first face in this group */
   int face_count;     /**< Number of faces in this group */
-} CJellyFormat3dObjGroup;
+};
 
 /**
  * @brief Structure representing a material mapping.
@@ -99,10 +102,10 @@ typedef struct {
  * This structure associates a material name from the "usemtl" directive with an integer index.
  * The index can later be used to reference a material definition from an MTL file.
  */
-typedef struct {
+struct CJellyFormat3dObjMaterialMapping {
   char name[CJELLY_FORMAT_3D_OBJ_MAX_NAME_LENGTH]; /**< Material name */
   int index;      /**< Assigned index for the material */
-} CJellyFormat3dObjMaterialMapping;
+};
 
 /**
  * @brief Main structure for storing an OBJ model.
@@ -110,7 +113,7 @@ typedef struct {
  * This structure contains dynamically allocated arrays for vertices, texture coordinates,
  * normals, faces, and groups. It also includes a reference to an external material library if present.
  */
-typedef struct CJellyFormat3dObjModel {
+struct CJellyFormat3dObjModel {
   CJellyFormat3dObjVertex * vertices;    /**< Array of vertices */
   int vertex_count;       /**< Number of vertices */
   int vertex_capacity;    /**< Allocated capacity for vertices */
@@ -136,7 +139,7 @@ typedef struct CJellyFormat3dObjModel {
   CJellyFormat3dObjMaterialMapping* material_mappings; /**< Array of material mappings */
   int material_mapping_count;    /**< Number of material mappings */
   int material_mapping_capacity; /**< Allocated capacity for material mappings */
-} CJellyFormat3dObjModel;
+};
 
 /**
  * @brief Loads an OBJ file and parses its contents.
@@ -178,7 +181,7 @@ CJellyFormat3dObjError cjelly_format_3d_obj_dump(const CJellyFormat3dObjModel * 
  * @param err The CJellyFormat3dObjError code.
  * @return A constant string describing the error.
  */
-const char* cjelly_format_3d_obj_strerror(CJellyFormat3dObjError err);
+const char * cjelly_format_3d_obj_strerror(CJellyFormat3dObjError err);
 
 
 #ifdef __cplusplus

@@ -4,6 +4,11 @@
 #include <string.h>
 #include "cjelly/format/3d/mtl.h"
 
+
+// Reference documents:
+// http://www.paulbourke.net/dataformats/mtl/
+
+
 #define LINE_SIZE 256
 
 

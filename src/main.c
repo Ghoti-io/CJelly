@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <cjelly/format/3d/obj.h>
-#include <cjelly/format/3d/mtl.h>
+// #include <cjelly/format/3d/obj.h>
+// #include <cjelly/format/3d/mtl.h>
+#include <cjelly/format/image.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -45,39 +46,53 @@ int main(void) {
   }
 #endif
 
-  // Open the OBJ file.
-  CJellyFormat3dObjModel * model = NULL;
-  CJellyFormat3dObjError obj_err = cjelly_format_3d_obj_load("test/models/violin_case/violin_case.obj", &model);
-  if (obj_err != CJELLY_FORMAT_3D_OBJ_SUCCESS) {
-    fprintf(stderr, "Error loading OBJ file: %s\n", cjelly_format_3d_obj_strerror(obj_err));
+  // Try to detect the type of image file.
+  CJellyFormatImageType type;
+  CJellyFormatImageError err = cjelly_format_image_detect_type("test/images/bmp/16Color.bmp", &type);
+  if (err != CJELLY_FORMAT_IMAGE_SUCCESS) {
+    fprintf(stderr, "Error detecting image type: %s\n", cjelly_format_image_strerror(err));
     exit(EXIT_FAILURE);
   }
 
-  // write the model to "test/models/violin_case/violin_case.comp.obj"
-  FILE * fd = fopen("test/models/violin_case/violin_case.comp.obj", "w");
-  if (!fd) {
-    fprintf(stderr, "Error opening file for writing\n");
-    exit(EXIT_FAILURE);
-  }
-  cjelly_format_3d_obj_dump(model, fd);
-  fclose(fd);
-
-  // Open the MTL file.
-  CJellyFormat3dMtl materials = {0};
-  CJellyFormat3dMtlError mtl_err = cjelly_format_3d_mtl_load("test/models/violin_case/vp.mtl", &materials);
-  if (mtl_err != CJELLY_FORMAT_3D_MTL_SUCCESS) {
-    fprintf(stderr, "Error loading MTL file: %s\n", cjelly_format_3d_mtl_strerror(mtl_err));
-    exit(EXIT_FAILURE);
+  if (type == CJELLY_FORMAT_IMAGE_BMP) {
+    printf("Detected BMP image\n");
+  } else {
+    printf("Unknown image type\n");
   }
 
-  // write the materials to "test/models/violin_case/vp.comp.mtl"
-  fd = fopen("test/models/violin_case/vp.comp.mtl", "w");
-  if (!fd) {
-    fprintf(stderr, "Error opening file for writing\n");
-    exit(EXIT_FAILURE);
-  }
-  cjelly_format_3d_mtl_dump(materials.materials, materials.material_count, fd);
-  fclose(fd);
+  // // Open the OBJ file.
+  // CJellyFormat3dObjModel * model = NULL;
+  // CJellyFormat3dObjError obj_err = cjelly_format_3d_obj_load("test/models/violin_case/violin_case.obj", &model);
+  // if (obj_err != CJELLY_FORMAT_3D_OBJ_SUCCESS) {
+  //   fprintf(stderr, "Error loading OBJ file: %s\n", cjelly_format_3d_obj_strerror(obj_err));
+  //   exit(EXIT_FAILURE);
+  // }
+
+  // // write the model to "test/models/violin_case/violin_case.comp.obj"
+  // FILE * fd = fopen("test/models/violin_case/violin_case.comp.obj", "w");
+  // if (!fd) {
+  //   fprintf(stderr, "Error opening file for writing\n");
+  //   exit(EXIT_FAILURE);
+  // }
+  // cjelly_format_3d_obj_dump(model, fd);
+  // fclose(fd);
+
+  // // Open the MTL file.
+  // CJellyFormat3dMtl materials = {0};
+  // CJellyFormat3dMtlError mtl_err = cjelly_format_3d_mtl_load("test/models/violin_case/vp.mtl", &materials);
+  // if (mtl_err != CJELLY_FORMAT_3D_MTL_SUCCESS) {
+  //   fprintf(stderr, "Error loading MTL file: %s\n", cjelly_format_3d_mtl_strerror(mtl_err));
+  //   exit(EXIT_FAILURE);
+  // }
+
+  // // write the materials to "test/models/violin_case/vp.comp.mtl"
+  // fd = fopen("test/models/violin_case/vp.comp.mtl", "w");
+  // if (!fd) {
+  //   fprintf(stderr, "Error opening file for writing\n");
+  //   exit(EXIT_FAILURE);
+  // }
+  // cjelly_format_3d_mtl_dump(materials.materials, materials.material_count, fd);
+  // fclose(fd);
 
   // Create two windows.
   CJellyWindow win1 = {0}, win2 = {0};
