@@ -94,7 +94,7 @@ CJellyFormat3dObjError cjelly_format_3d_obj_load(const char * filename, CJellyFo
         if (model->texcoord_count >= model->texcoord_capacity) {
           model->texcoord_capacity *= 2;
           CJellyFormat3dObjTexCoord* temp = realloc(model->texcoords, model->texcoord_capacity * sizeof(CJellyFormat3dObjTexCoord));
-          if (!temp) {goto ERROR_CLEANUP; }
+          if (!temp) { goto ERROR_CLEANUP; }
           model->texcoords = temp;
         }
         model->texcoords[model->texcoord_count++] = vt;
@@ -125,9 +125,14 @@ CJellyFormat3dObjError cjelly_format_3d_obj_load(const char * filename, CJellyFo
       // Read a face line.
       CJellyFormat3dObjFace face;
       face.count = 0;
+      face.material_index = current_material_index;
+      face.overflow = NULL; // Initialize overflow to NULL.
+      int extra_count = 0;  // Number of vertices stored in overflow.
+      int extra_capacity = 0; // Capacity for overflow array.
+
       // Tokenize the line after "f ".
       char * token = strtok(line + 2, " ");
-      while (token != NULL && face.count < 4) {
+      while (token != NULL) {
         int vIndex = 0, vtIndex = 0, vnIndex = 0;
         if (strchr(token, '/')) {
           /* Replace '/' with space for easier parsing */
@@ -139,26 +144,55 @@ CJellyFormat3dObjError cjelly_format_3d_obj_load(const char * filename, CJellyFo
               temp[i] = ' ';
           }
           // Parse the indices (some may be missing).
-          int count = sscanf(temp, "%d %d %d", &vIndex, &vtIndex, &vnIndex);
-          if (count < 3)
+          int parsed = sscanf(temp, "%d %d %d", &vIndex, &vtIndex, &vnIndex);
+          if (parsed < 3)
             vtIndex = 0; // If texture coordinate is missing, set to 0 (or use -1).
         }
         else {
           vIndex = atoi(token);
         }
-        // Convert from 1-based to 0-based indices.
-        face.vertex[face.count] = vIndex - 1;
-        face.texcoord[face.count] = vtIndex ? (vtIndex - 1) : -1;
-        face.normal[face.count] = vnIndex ? (vnIndex - 1) : -1;
-        face.count++;
+
+        // For the first four vertices, store in fixed arrays.
+        if (face.count < 4) {
+          face.vertex[face.count] = vIndex - 1;
+          face.texcoord[face.count] = vtIndex ? (vtIndex - 1) : -1;
+          face.normal[face.count] = vnIndex ? (vnIndex - 1) : -1;
+          face.count++;
+        }
+        else {
+          // For extra vertices, allocate or grow the overflow array.
+          if (face.overflow == NULL) {
+            extra_capacity = 4;
+            face.overflow = (CJellyFormat3dObjFaceOverflow *)malloc(extra_capacity * sizeof(CJellyFormat3dObjFaceOverflow));
+            if (!face.overflow) { goto ERROR_CLEANUP; }
+            extra_count = 0;
+          }
+          if (extra_count >= extra_capacity) {
+            extra_capacity *= 2;
+            CJellyFormat3dObjFaceOverflow * tmp = realloc(face.overflow, extra_capacity * sizeof(CJellyFormat3dObjFaceOverflow));
+            if (!tmp) { goto ERROR_CLEANUP; }
+            face.overflow = tmp;
+          }
+          face.overflow[extra_count].vertex = vIndex - 1;
+          face.overflow[extra_count].texcoord = vtIndex ? (vtIndex - 1) : -1;
+          face.overflow[extra_count].normal = vnIndex ? (vnIndex - 1) : -1;
+          extra_count++;
+          face.count++; // Increase total vertex count.
+        }
         token = strtok(NULL, " ");
       }
-      // Assign the current material index to the face.
-      face.material_index = current_material_index;
+      // Append the face to the model's face array.
       if (model->face_count >= model->face_capacity) {
         model->face_capacity *= 2;
         CJellyFormat3dObjFace * temp = realloc(model->faces, model->face_capacity * sizeof(CJellyFormat3dObjFace));
-        if (!temp) { goto ERROR_CLEANUP; }
+        if (!temp) {
+          // Free the overflow array if it was allocated.
+          // The code pattern is different for this case because the operation
+          // to add the face to the faces array failed.  Therefore, it will
+          // not be automatically freed when the model itself is freed.
+          if (face.overflow) free(face.overflow);
+          goto ERROR_CLEANUP;
+        }
         model->faces = temp;
       }
       model->faces[model->face_count++] = face;
@@ -169,6 +203,9 @@ CJellyFormat3dObjError cjelly_format_3d_obj_load(const char * filename, CJellyFo
     else if (strncmp(line, "g ", 2) == 0 || strncmp(line, "o ", 2) == 0) {
       // Read a group or object name line.
       char name[CJELLY_FORMAT_3D_OBJ_MAX_NAME_LENGTH];
+      // 128 is hard-coded because "%127s" is used in the sscanf call.
+      // The assert is used to ensure that the buffer cannot be smaller
+      // than this hard-coded value.
       assert(sizeof(name) >= 128);
       if (sscanf(line + 2, "%127s", name) == 1) {
         if (model->group_count >= model->group_capacity) {
@@ -191,6 +228,9 @@ CJellyFormat3dObjError cjelly_format_3d_obj_load(const char * filename, CJellyFo
     else if (strncmp(line, "usemtl", 6) == 0) {
       // Read a material usage directive.
       char mtl_name[CJELLY_FORMAT_3D_OBJ_MAX_NAME_LENGTH];
+      // 128 is hard-coded because "%127s" is used in the sscanf call.
+      // The assert is used to ensure that the buffer cannot be smaller
+      // than this hard-coded value.
       assert(sizeof(mtl_name) >= 128);
       if (sscanf(line + 6, "%127s", mtl_name) == 1) {
         int found = 0;
@@ -236,6 +276,9 @@ CJellyFormat3dObjError cjelly_format_3d_obj_load(const char * filename, CJellyFo
 
   // Error handling.
 ERROR_CLEANUP:
+  // If an error is not set, then default to out-of-memory.
+  // This approach is used in this function because out-of-memory is the most
+  // common reason to error out, so it was chosen to be the default.
   if (err == CJELLY_FORMAT_3D_OBJ_SUCCESS) {
     err = CJELLY_FORMAT_3D_OBJ_ERR_OUT_OF_MEMORY;
   }
@@ -250,7 +293,15 @@ void cjelly_format_3d_obj_free(CJellyFormat3dObjModel* model) {
   if (model->vertices) free(model->vertices);
   if (model->texcoords) free(model->texcoords);
   if (model->normals) free(model->normals);
-  if (model->faces) free(model->faces);
+  if (model->faces) {
+    // Free per-face overflow arrays.
+    for (int i = 0; i < model->face_count; ++i) {
+      if (model->faces[i].overflow) {
+        free(model->faces[i].overflow);
+      }
+    }
+    free(model->faces);
+  }
   if (model->groups) free(model->groups);
   if (model->material_mappings) free(model->material_mappings);
   free(model);
@@ -296,7 +347,7 @@ CJellyFormat3dObjError cjelly_format_3d_obj_dump(const CJellyFormat3dObjModel *m
       // Initialize last material index to a value that cannot be valid.
       int last_material_index = -2;
       for (int i = start; i < start + count; ++i) {
-        // Only print a "usemtl" directive if the material changed.
+        // Only print "usemtl" if material has changed.
         if (model->faces[i].material_index != last_material_index) {
           if (model->faces[i].material_index != -1) {
             const char * mtl_name = NULL;
@@ -320,11 +371,11 @@ CJellyFormat3dObjError cjelly_format_3d_obj_dump(const CJellyFormat3dObjModel *m
           }
           last_material_index = model->faces[i].material_index;
         }
-        // Print the face.
+        // Print the face line.
         ret = fprintf(fd, "f");
         if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
-        for (int j = 0; j < model->faces[i].count; ++j) {
-          // OBJ format uses 1-based indices.
+        // Print the first four vertices.
+        for (int j = 0; j < (model->faces[i].count > 4 ? 4 : model->faces[i].count); ++j) {
           int v = model->faces[i].vertex[j] + 1;
           int vt = model->faces[i].texcoord[j];
           int vn = model->faces[i].normal[j];
@@ -340,6 +391,29 @@ CJellyFormat3dObjError cjelly_format_3d_obj_dump(const CJellyFormat3dObjModel *m
             if (vn != -1) {
               ret = fprintf(fd, "/%d", vn + 1);
               if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+            }
+          }
+        }
+        // Print overflow vertices, if any.
+        if (model->faces[i].count > 4 && model->faces[i].overflow != NULL) {
+          int overflow_count = model->faces[i].count - 4;
+          for (int j = 0; j < overflow_count; j++) {
+            int v = model->faces[i].overflow[j].vertex + 1;
+            int vt = model->faces[i].overflow[j].texcoord;
+            int vn = model->faces[i].overflow[j].normal;
+            ret = fprintf(fd, " %d", v);
+            if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+            if (vt != -1 || vn != -1) {
+              ret = fprintf(fd, "/");
+              if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+              if (vt != -1) {
+                ret = fprintf(fd, "%d", vt + 1);
+                if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+              }
+              if (vn != -1) {
+                ret = fprintf(fd, "/%d", vn + 1);
+                if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+              }
             }
           }
         }
@@ -370,7 +444,7 @@ else {
       }
       ret = fprintf(fd, "f");
       if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
-      for (int j = 0; j < model->faces[i].count; ++j) {
+      for (int j = 0; j < (model->faces[i].count > 4 ? 4 : model->faces[i].count); ++j) {
         int v = model->faces[i].vertex[j] + 1;
         int vt = model->faces[i].texcoord[j];
         int vn = model->faces[i].normal[j];
@@ -386,6 +460,28 @@ else {
           if (vn != -1) {
             ret = fprintf(fd, "/%d", vn + 1);
             if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+          }
+        }
+      }
+      if (model->faces[i].count > 4 && model->faces[i].overflow != NULL) {
+        int overflow_count = model->faces[i].count - 4;
+        for (int j = 0; j < overflow_count; j++) {
+          int v = model->faces[i].overflow[j].vertex + 1;
+          int vt = model->faces[i].overflow[j].texcoord;
+          int vn = model->faces[i].overflow[j].normal;
+          ret = fprintf(fd, " %d", v);
+          if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+          if (vt != -1 || vn != -1) {
+            ret = fprintf(fd, "/");
+            if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+            if (vt != -1) {
+              ret = fprintf(fd, "%d", vt + 1);
+              if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+            }
+            if (vn != -1) {
+              ret = fprintf(fd, "/%d", vn + 1);
+              if (ret < 0) return CJELLY_FORMAT_3D_OBJ_ERR_IO;
+            }
           }
         }
       }
