@@ -38,14 +38,14 @@ typedef enum {
  * This structure holds general image properties such as dimensions,
  * bit depth, and a pointer to the actual pixel data.
  */
-typedef struct CJellyImageRaw {
+typedef struct CJellyFormatImageRaw {
     int width;                /**< The width of the image in pixels. */
     int height;               /**< The height of the image in pixels. */
     int channels;             /**< The number of color channels. */
     size_t bitdepth;          /**< The bit depth of the image. */
     size_t data_size;         /**< The size of the pixel data in bytes. */
     unsigned char * data;     /**< The raw pixel data. */
-} CJellyImageRaw;
+} CJellyFormatImageRaw;
 
 /**
  * @brief Represents a generic image.
@@ -53,11 +53,11 @@ typedef struct CJellyImageRaw {
  * This structure holds general image information such as the file name and
  * image type, which is expanded on by the format-specific loaders.
  */
-typedef struct CJellyImage {
+typedef struct CJellyFormatImage {
   unsigned char * name;       /**< The name of the file. */
-  CJellyImageRaw * raw;       /**< The raw image data. */
+  CJellyFormatImageRaw * raw; /**< The raw image data. */
   CJellyFormatImageType type; /**< Image format type. */
-} CJellyImage;
+} CJellyFormatImage;
 
 /**
  * @brief Loads an image from file.
@@ -66,18 +66,18 @@ typedef struct CJellyImage {
  * and calls the appropriate format-specific loader.
  *
  * @param filename Path to the image file.
- * @param out_image Output pointer that will point to the allocated CJellyImage on success.
+ * @param out_image Output pointer that will point to the allocated CJellyFormatImage on success.
  * @return 0 on success, non-zero error code on failure.
  */
-CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyImage * * out_image);
+CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyFormatImage * * out_image);
 
 /**
  * @brief Deallocates the memory used by an image.  The image pointer will be
  * set to NULL.
  *
- * @param image Pointer to the CJellyImage to be freed.
+ * @param image Pointer to the CJellyFormatImage to be freed.
  */
-void cjelly_format_image_free(CJellyImage * image);
+void cjelly_format_image_free(CJellyFormatImage * image);
 
 /**
  * @brief Detect the type of image file at the given path.

@@ -10,8 +10,8 @@ extern "C" {
 /**
  * Typedef prototypes.
  */
-typedef struct CJellyImageRaw CJellyImageRaw;
-typedef struct CJellyImage CJellyImage;
+typedef struct CJellyFormatImageRaw CJellyFormatImageRaw;
+typedef struct CJellyFormatImage CJellyFormatImage;
 typedef struct CJellyFormat3dMtlMaterial CJellyFormat3dMtlMaterial;
 typedef struct CJellyFormat3dMtl CJellyFormat3dMtl;
 typedef struct CJellyFormat3dObjVertex CJellyFormat3dObjVertex;

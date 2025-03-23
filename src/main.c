@@ -47,14 +47,14 @@ int main(void) {
 #endif
 
   // Try to detect the type of image file.
-  CJellyFormatImageType type;
-  CJellyFormatImageError err = cjelly_format_image_detect_type("test/images/bmp/16Color.bmp", &type);
+  CJellyFormatImage * image = NULL;
+  CJellyFormatImageError err = cjelly_format_image_load("test/images/bmp/16Color.bmp", &image);
   if (err != CJELLY_FORMAT_IMAGE_SUCCESS) {
-    fprintf(stderr, "Error detecting image type: %s\n", cjelly_format_image_strerror(err));
+    fprintf(stderr, "Error loading image: %s\n", cjelly_format_image_strerror(err));
     exit(EXIT_FAILURE);
   }
 
-  if (type == CJELLY_FORMAT_IMAGE_BMP) {
+  if (image->type == CJELLY_FORMAT_IMAGE_BMP) {
     printf("Detected BMP image\n");
   } else {
     printf("Unknown image type\n");

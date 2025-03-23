@@ -4,7 +4,7 @@
 
 #include <cjelly/format/image.h>
 
-CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyImage * * out_image) {
+CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyFormatImage * * out_image) {
   *out_image = NULL;
 
   CJellyFormatImageType type;
@@ -12,11 +12,11 @@ CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyIma
   if (err != CJELLY_FORMAT_IMAGE_SUCCESS) return err;
 
   // Allocate memory for the image structure.
-  CJellyImage * image = (CJellyImage *)malloc(sizeof(CJellyImage));
+  CJellyFormatImage * image = (CJellyFormatImage *)malloc(sizeof(CJellyFormatImage));
   if (!image) return CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY;
 
   // Initialize the image structure.
-  *image = (CJellyImage){0};
+  *image = (CJellyFormatImage){0};
 
   // Copy the filename.
   size_t len = strlen(filename);
@@ -28,7 +28,7 @@ CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyIma
 
   switch (type) {
     case CJELLY_FORMAT_IMAGE_BMP:
-      //err = cjelly_format_image_bmp_load(filename, (CJellyImageBmp *)image);
+      //err = cjelly_format_image_bmp_load(filename, (CJellyFormatImageBmp *)image);
       break;
     default:
       err = CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT;
@@ -50,12 +50,12 @@ ERROR_IMAGE_CLEANUP:
 }
 
 
-void cjelly_format_image_free(CJellyImage * image) {
+void cjelly_format_image_free(CJellyFormatImage * image) {
   if (!image) return;
 
   switch (image->type) {
     case CJELLY_FORMAT_IMAGE_BMP:
-      //cjelly_format_image_bmp_free((CJellyImageBmp *)image);
+      //cjelly_format_image_bmp_free((CJellyFormatImageBmp *)image);
       break;
     default:
       break;
@@ -78,6 +78,18 @@ typedef struct {
 } ImageSignature;  
 
 
+// Define known image signatures.
+static const unsigned char signature_bmp[] = {'B', 'M'};
+// static const unsigned char signature_png[] = {0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+// static const unsigned char signature_jpg[] = {0xFF, 0xD8, 0xFF};
+
+
+static ImageSignature signatures[] = {
+  { CJELLY_FORMAT_IMAGE_BMP, signature_bmp, sizeof(signature_bmp) },
+  // { CJELLY_FORMAT_IMAGE_PNG, signature_png, sizeof(signature_png) },
+  // { CJELLY_FORMAT_IMAGE_JPG, signature_jpg, sizeof(signature_jpg) },
+};
+
 CJellyFormatImageError cjelly_format_image_detect_type(const char * path, CJellyFormatImageType * out_type) {
   *out_type = CJELLY_FORMAT_IMAGE_UNKNOWN;
 
@@ -90,17 +102,6 @@ CJellyFormatImageError cjelly_format_image_detect_type(const char * path, CJelly
   if (!fp) {
     return CJELLY_FORMAT_IMAGE_ERR_FILE_NOT_FOUND;
   }
-
-  // Define known image signatures.
-  static const unsigned char bmp_signature[] = {'B', 'M'};
-  // static const unsigned char png_signature[] = {0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
-  // static const unsigned char jpg_signature[] = {0xFF, 0xD8, 0xFF};
-
-  ImageSignature signatures[] = {
-    { CJELLY_FORMAT_IMAGE_BMP, bmp_signature, sizeof(bmp_signature) },
-    // { CJELLY_FORMAT_IMAGE_PNG, png_signature, sizeof(png_signature) },
-    // { CJELLY_FORMAT_IMAGE_JPG, jpg_signature, sizeof(jpg_signature) },
-  };
 
   // Determine the maximum signature length required.
   size_t max_sig_length = 0;
