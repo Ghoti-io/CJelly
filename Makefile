@@ -112,6 +112,8 @@ endif
 
 INCLUDE := -I include/cjelly -I include/ -I $(GEN_DIR)/
 LIBOBJECTS := \
+	$(OBJ_DIR)/format/3d/mtl.o \
+	$(OBJ_DIR)/format/3d/obj.o \
 	$(OBJ_DIR)/cjelly.o
 
 
@@ -124,6 +126,22 @@ CJELLYLIBRARY := -L $(APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)
 all: $(APP_DIR)/$(TARGET) $(APP_DIR)/cjelly$(EXE_EXTENSION) ## Build the shared library
 
 ####################################################################
+# Test Files
+####################################################################
+
+# Automatically gather all files under the test/ directory (recursively)
+TEST_FILES_SRC := $(shell find test/ -type f)
+
+# Destination files will be placed under $(APP_DIR)/ preserving the test/ folder structure.
+TEST_FILES := $(addprefix $(APP_DIR)/, $(TEST_FILES_SRC))
+
+# Pattern rule to copy each test file from the test/ directory to $(APP_DIR)/test/
+$(APP_DIR)/test/%: test/%
+	@mkdir -p $(dir $@)
+	cp -u $< $@
+
+
+####################################################################
 # Dependency Variables
 ####################################################################
 DEP_LIBVER = \
@@ -131,6 +149,12 @@ DEP_LIBVER = \
 DEP_MACROS = \
 	include/cjelly/macros.h \
 	$(DEP_LIBVER)
+DEP_FORMAT_3D_MTL = \
+	include/cjelly/format/3d/mtl.h \
+	$(DEP_MACROS)
+DEP_FORMAT_3D_OBJ = \
+	include/cjelly/format/3d/obj.h \
+	$(DEP_FORMAT_3D_MTL)
 
 DEP_CJELLY = \
 	include/cjelly/cjelly.h \
@@ -146,6 +170,13 @@ $(LIBOBJECTS) :
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ $(OS_SPECIFIC_CXX_FLAGS)
 
+$(OBJ_DIR)/format/3d/mtl.o: \
+	src/format/3d/mtl.c \
+	$(DEP_FORMAT_3D_MTL)
+
+$(OBJ_DIR)/format/3d/obj.o: \
+	src/format/3d/obj.c \
+	$(DEP_FORMAT_3D_OBJ)
 
 $(OBJ_DIR)/cjelly.o: \
 	src/cjelly.c \
@@ -247,6 +278,7 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 
 test: ## Make and run the Unit tests
 test: \
+		$(TEST_FILES) \
 		$(APP_DIR)/$(TARGET) \
 		$(APP_DIR)/main$(EXE_EXTENSION)
 #				$(APP_DIR)/test$(EXE_EXTENSION) \
