@@ -20,7 +20,8 @@ typedef enum {
   CJELLY_FORMAT_3D_MTL_SUCCESS = 0,           /**< No error */
   CJELLY_FORMAT_3D_MTL_ERR_FILE_NOT_FOUND,    /**< Unable to open the file */
   CJELLY_FORMAT_3D_MTL_ERR_OUT_OF_MEMORY,     /**< Memory allocation failure */
-  CJELLY_FORMAT_3D_MTL_ERR_INVALID_FORMAT     /**< File contains an invalid format */
+  CJELLY_FORMAT_3D_MTL_ERR_INVALID_FORMAT,    /**< File contains an invalid format */
+  CJELLY_FORMAT_3D_MTL_ERR_IO                 /**< I/O error while reading/writing the file */
 } CJellyFormat3dMtlError;
 
 /**
@@ -70,6 +71,19 @@ CJellyFormat3dMtlError cjelly_format_3d_mtl_load(const char * filename, CJellyFo
  * @param material_count The number of materials in the array.
  */
 void cjelly_format_3d_mtl_free(CJellyFormat3dMtl * materials);
+
+/**
+ * @brief Dumps the contents of an array of CJellyFormat3dMtlMaterial to the specified FILE pointer in valid MTL format.
+ *
+ * This function iterates over the material array and prints each material using the standard
+ * MTL file conventions.
+ *
+ * @param materials Pointer to the array of CJellyFormat3dMtlMaterial structures.
+ * @param material_count Number of materials in the array.
+ * @param fd FILE pointer to write the output (e.g., stdout).
+ * @return CJellyFormat3dObjError Error code indicating success or an I/O/format error.
+ */
+CJellyFormat3dMtlError cjelly_format_3d_mtl_dump(const CJellyFormat3dMtlMaterial *materials, int material_count, FILE *fd);
 
 /**
  * @brief Converts an MTL error code to a human-readable error message.

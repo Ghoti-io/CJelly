@@ -236,6 +236,8 @@ endif
 $(APP_DIR)/main$(EXE_EXTENSION): \
 		src/main.c \
 		$(DEP_CJELLY) \
+		$(DEP_FORMAT_3D_MTL) \
+		$(DEP_FORMAT_3D_OBJ) \
 		$(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling CJelly Test ###\n"
 	@mkdir -p $(@D)

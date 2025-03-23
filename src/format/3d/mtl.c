@@ -117,6 +117,30 @@ void cjelly_format_3d_mtl_free(CJellyFormat3dMtl * materials) {
 }
 
 
+CJellyFormat3dMtlError cjelly_format_3d_mtl_dump(const CJellyFormat3dMtlMaterial *materials, int material_count, FILE *fd) {
+  if (!materials || material_count <= 0 || !fd)
+  return CJELLY_FORMAT_3D_MTL_ERR_IO;
+
+  int ret;
+  for (int i = 0; i < material_count; ++i) {
+    ret = fprintf(fd, "newmtl %s\n", materials[i].name);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+    ret = fprintf(fd, "Ka %f %f %f\n", materials[i].Ka[0], materials[i].Ka[1], materials[i].Ka[2]);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+    ret = fprintf(fd, "Kd %f %f %f\n", materials[i].Kd[0], materials[i].Kd[1], materials[i].Kd[2]);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+    ret = fprintf(fd, "Ks %f %f %f\n", materials[i].Ks[0], materials[i].Ks[1], materials[i].Ks[2]);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+    ret = fprintf(fd, "Ns %f\n", materials[i].Ns);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+    ret = fprintf(fd, "d %f\n", materials[i].d);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+    ret = fprintf(fd, "illum %d\n\n", materials[i].illum);
+    if (ret < 0) return CJELLY_FORMAT_3D_MTL_ERR_IO;
+  }
+  return CJELLY_FORMAT_3D_MTL_SUCCESS;
+}
+
 const char * cjelly_format_3d_mtl_strerror(CJellyFormat3dMtlError err) {
   switch (err) {
     case CJELLY_FORMAT_3D_MTL_SUCCESS:
@@ -127,6 +151,8 @@ const char * cjelly_format_3d_mtl_strerror(CJellyFormat3dMtlError err) {
       return "Out of memory";
     case CJELLY_FORMAT_3D_MTL_ERR_INVALID_FORMAT:
       return "Invalid material file format";
+    case CJELLY_FORMAT_3D_MTL_ERR_IO:
+      return "I/O error";
     default:
       return "Unknown error";
   }
