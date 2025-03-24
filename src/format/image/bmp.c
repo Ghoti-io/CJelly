@@ -502,3 +502,49 @@ ERROR_FILE_CLOSE:
   }
   return err;
 }
+
+
+void cjelly_format_image_bmp_dump(const CJellyFormatImageBMP * imageBmp) {
+  const CJellyFormatImage * image = (const CJellyFormatImage *)imageBmp;
+  if (!image || !image->raw || !image->raw->data) {
+      fprintf(stderr, "Invalid image data.\n");
+      return;
+  }
+
+  // Dump header values from the loaded image.
+  printf("Image Type: BMP\n");
+  printf("Width: %d\n", image->raw->width);
+  printf("Height: %d\n", image->raw->height);
+  printf("Bit Depth: %zu\n", image->raw->bitdepth);
+  printf("Channels: %d\n", image->raw->channels);
+  printf("Data Size: %zu bytes\n", image->raw->data_size);
+  printf("\n");
+
+  int width = image->raw->width;
+  int height = image->raw->height;
+  int channels = image->raw->channels;
+
+  // Dump pixel data.
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      int idx = (y * width + x) * channels;
+      if (channels == 3) {
+        // Print in RRGGBB format.
+        printf("%02X%02X%02X ", image->raw->data[idx],
+          image->raw->data[idx + 1],
+          image->raw->data[idx + 2]);
+    }
+    else if (channels == 4) {
+        // Print in RRGGBBAA format.
+        printf("%02X%02X%02X%02X ", image->raw->data[idx],
+          image->raw->data[idx + 1],
+          image->raw->data[idx + 2],
+          image->raw->data[idx + 3]);
+      }
+      else {
+          printf("?? ");
+      }
+    }
+    printf("\n");
+  }
+}

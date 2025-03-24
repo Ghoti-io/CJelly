@@ -38,6 +38,17 @@ typedef struct CJellyFormatImageBMP {
  */
 CJellyFormatImageError cjelly_format_image_bmp_load(const char * filename, CJellyFormatImage * * out_image);
 
+/**
+ * @brief Dump BMP header and pixel data to stdout for debugging.
+ *
+ * The header dump prints the image type, width, height, bit depth, number of channels,
+ * and data size. Then, for each pixel, it prints its color value in either RRGGBB (for RGB)
+ * or RRGGBBAA (for RGBA) hexadecimal format, with pixels separated by a space and a
+ * newline after each row.
+ *
+ * @param imageBmp Pointer to the CJellyFormatImageBMP structure containing the loaded image.
+ */
+void cjelly_format_image_bmp_dump(const CJellyFormatImageBMP * imageBmp);
 
 #ifdef __cplusplus
 }
