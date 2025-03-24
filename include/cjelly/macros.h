@@ -38,6 +38,41 @@ typedef struct CJellyFormat3dObjModel CJellyFormat3dObjModel;
 #endif
 
 
+/**
+ * A cross-compiler macro for marking a function as deprecated.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define GCJ_DEPRECATED __attribute__((deprecated))
+
+#elif defined(_MSC_VER)
+#define GCJ_DEPRECATED __declspec(deprecated)
+
+#else
+#define GCJ_DEPRECATED
+
+#endif
+
+/**
+ * @brief Endianness conversion macros.
+ */
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+    // On little-endian systems, no conversion is needed.
+    #define GCJ_LE16_TO_HOST(x) (x)
+    #define GCJ_LE32_TO_HOST(x) (x)
+#elif defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+    // On big-endian systems, swap the bytes.
+    #define GCJ_LE16_TO_HOST(x) ( ((x) >> 8) | (((x) & 0xff) << 8) )
+    #define GCJ_LE32_TO_HOST(x) ( \
+        (((x) >> 24) & 0xff)    | \
+        (((x) >> 8)  & 0xff00)  | \
+        (((x) & 0xff00) << 8)   | \
+        (((x) & 0xff) << 24) )
+#else
+    #error "Endianness not defined"
+#endif
+
+
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

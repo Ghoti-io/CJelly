@@ -3,46 +3,36 @@
 #include <stdlib.h>
 
 #include <cjelly/format/image.h>
+#include <cjelly/format/image/bmp.h>
 
 CJellyFormatImageError cjelly_format_image_load(const char * filename, CJellyFormatImage * * out_image) {
   *out_image = NULL;
 
+  // Detect the image type so that we can call the appropriate loader.
   CJellyFormatImageType type;
   CJellyFormatImageError err = cjelly_format_image_detect_type(filename, &type);
   if (err != CJELLY_FORMAT_IMAGE_SUCCESS) return err;
 
-  // Allocate memory for the image structure.
-  CJellyFormatImage * image = (CJellyFormatImage *)malloc(sizeof(CJellyFormatImage));
-  if (!image) return CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY;
-
-  // Initialize the image structure.
-  *image = (CJellyFormatImage){0};
-
-  // Copy the filename.
-  size_t len = strlen(filename);
-  image->name = (unsigned char *)malloc(len + 1);
-  if (!image->name) goto ERROR_IMAGE_CLEANUP;
-  memcpy(image->name, filename, len + 1);
- 
-  image->type = type;
-
+  // Load the image based on the detected type.
   switch (type) {
     case CJELLY_FORMAT_IMAGE_BMP:
-      //err = cjelly_format_image_bmp_load(filename, (CJellyFormatImageBmp *)image);
+      err = cjelly_format_image_bmp_load(filename, out_image);
       break;
     default:
       err = CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT;
-      goto ERROR_NAME_CLEANUP;
+      goto ERROR_IMAGE_CLEANUP;
   }
+  if (err != CJELLY_FORMAT_IMAGE_SUCCESS) return err;
 
-  *out_image = image;
+  // Lastly, opy the filename.
+  size_t len = strlen(filename);
+  (*out_image)->name = (unsigned char *)malloc(len + 1);
+  if (!(*out_image)->name) goto ERROR_IMAGE_CLEANUP;
+  memcpy((*out_image)->name, filename, len + 1);
+
   return CJELLY_FORMAT_IMAGE_SUCCESS;
 
-ERROR_NAME_CLEANUP:
-  free(image->name);
-
 ERROR_IMAGE_CLEANUP:
-  free(image);
   if (err == CJELLY_FORMAT_IMAGE_SUCCESS) {
     err = CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY;
   }
@@ -147,9 +137,9 @@ const char * cjelly_format_image_strerror(CJellyFormatImageError err) {
     case CJELLY_FORMAT_IMAGE_ERR_OUT_OF_MEMORY:
       return "Out of memory";
     case CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT:
-      return "Invalid OBJ file format";
+      return "Invalid image file format";
     case CJELLY_FORMAT_IMAGE_ERR_IO:
-      return "I/O error when reading/writing the OBJ file";
+      return "I/O error when reading/writing the image file";
     default:
       return "Unknown error";
   }
