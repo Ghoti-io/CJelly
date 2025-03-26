@@ -47,57 +47,6 @@ int main(void) {
   }
 #endif
 
-  // Try to detect the type of image file.
-  CJellyFormatImage * image = NULL;
-  CJellyFormatImageError err = cjelly_format_image_load("test/images/bmp/16Color.bmp", &image);
-  if (err != CJELLY_FORMAT_IMAGE_SUCCESS) {
-    fprintf(stderr, "Error loading image: %s\n", cjelly_format_image_strerror(err));
-    exit(EXIT_FAILURE);
-  }
-
-  if (image->type == CJELLY_FORMAT_IMAGE_BMP) {
-    printf("Detected BMP image\n");
-  } else {
-    printf("Unknown image type\n");
-  }
-
-  CJellyFormatImageBMP * bmpImage = (CJellyFormatImageBMP *)image;
-  cjelly_format_image_bmp_dump(bmpImage);
-
-  // // Open the OBJ file.
-  // CJellyFormat3dObjModel * model = NULL;
-  // CJellyFormat3dObjError obj_err = cjelly_format_3d_obj_load("test/models/violin_case/violin_case.obj", &model);
-  // if (obj_err != CJELLY_FORMAT_3D_OBJ_SUCCESS) {
-  //   fprintf(stderr, "Error loading OBJ file: %s\n", cjelly_format_3d_obj_strerror(obj_err));
-  //   exit(EXIT_FAILURE);
-  // }
-
-  // // write the model to "test/models/violin_case/violin_case.comp.obj"
-  // FILE * fd = fopen("test/models/violin_case/violin_case.comp.obj", "w");
-  // if (!fd) {
-  //   fprintf(stderr, "Error opening file for writing\n");
-  //   exit(EXIT_FAILURE);
-  // }
-  // cjelly_format_3d_obj_dump(model, fd);
-  // fclose(fd);
-
-  // // Open the MTL file.
-  // CJellyFormat3dMtl materials = {0};
-  // CJellyFormat3dMtlError mtl_err = cjelly_format_3d_mtl_load("test/models/violin_case/vp.mtl", &materials);
-  // if (mtl_err != CJELLY_FORMAT_3D_MTL_SUCCESS) {
-  //   fprintf(stderr, "Error loading MTL file: %s\n", cjelly_format_3d_mtl_strerror(mtl_err));
-  //   exit(EXIT_FAILURE);
-  // }
-
-  // // write the materials to "test/models/violin_case/vp.comp.mtl"
-  // fd = fopen("test/models/violin_case/vp.comp.mtl", "w");
-  // if (!fd) {
-  //   fprintf(stderr, "Error opening file for writing\n");
-  //   exit(EXIT_FAILURE);
-  // }
-  // cjelly_format_3d_mtl_dump(materials.materials, materials.material_count, fd);
-  // fclose(fd);
-
   // Create two windows.
   CJellyWindow win1 = {0}, win2 = {0};
 
@@ -126,7 +75,7 @@ int main(void) {
   createSwapChainForWindow(&win2);
   createImageViewsForWindow(&win2);
   createFramebuffersForWindow(&win2);
-  createCommandBuffersForWindow(&win2);
+  createTexturedCommandBuffersForWindow(&win2);
   createSyncObjectsForWindow(&win2);
 
   // Main render loop.

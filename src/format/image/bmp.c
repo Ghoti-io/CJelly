@@ -43,7 +43,7 @@ static int calcRowSize(int width, int bitsPerPixel) {
 }
 
 // Helper: read a palette of numColors entries.
-static RGBQuad* readPalette(FILE *fp, unsigned int numColors) {
+static RGBQuad* readPalette(FILE * fp, unsigned int numColors) {
   RGBQuad * palette = (RGBQuad *)malloc(numColors * sizeof(RGBQuad));
   if (!palette) {
     return NULL;
@@ -57,7 +57,7 @@ static RGBQuad* readPalette(FILE *fp, unsigned int numColors) {
 
 // Helper: process uncompressed rows. This function seeks through each row,
 // flips the image vertically, and calls a conversion callback for each row.
-static CJellyFormatImageError processUncompressedRows(FILE *fp, int bitsPerPixel,
+static CJellyFormatImageError processUncompressedRows(FILE * fp, int bitsPerPixel,
     int width, int height, unsigned char *dest, int destPixelSize, bool topDown,
     void (*convertRow)(const unsigned char *src, int width, unsigned char * dest)) {
   int rowSize = calcRowSize(width, bitsPerPixel);
@@ -78,13 +78,21 @@ static CJellyFormatImageError processUncompressedRows(FILE *fp, int bitsPerPixel
   return CJELLY_FORMAT_IMAGE_SUCCESS;
 }
 
-// Conversion callback for 24-bit rows: no conversion needed.
-static void convert24BitRow(const unsigned char *src, int width, unsigned char *dest) {
-  memcpy(dest, src, width * 3);
+// Conversion callback for 24-bit rows: convert from BGR to RGB.
+static void convert24BitRow(const unsigned char * src, int width, unsigned char *dest) {
+  for (int x = 0; x < width; ++x) {
+    int pixelIndex = x * 3;
+    unsigned char blue  = src[pixelIndex + 0];
+    unsigned char green = src[pixelIndex + 1];
+    unsigned char red   = src[pixelIndex + 2];
+    dest[(x * 3) + 0] = red;
+    dest[(x * 3) + 1] = green;
+    dest[(x * 3) + 2] = blue;
+  }
 }
 
 // Conversion callback for 16-bit rows (assumed 5-6-5 format).
-static void convert16BitRow(const unsigned char *src, int width, unsigned char *dest) {
+static void convert16BitRow(const unsigned char * src, int width, unsigned char * dest) {
   for (int x = 0; x < width; ++x) {
     int pixelIndex = x * 2;
     unsigned short pixel = (unsigned short)(src[pixelIndex] | (src[pixelIndex + 1] << 8));
@@ -98,7 +106,7 @@ static void convert16BitRow(const unsigned char *src, int width, unsigned char *
 }
 
 // Conversion callback for 32-bit rows (assumed BGRA to RGBA).
-static void convert32BitRow(const unsigned char *src, int width, unsigned char *dest) {
+static void convert32BitRow(const unsigned char * src, int width, unsigned char * dest) {
   for (int x = 0; x < width; ++x) {
     int pixelIndex = x * 4;
     unsigned char blue  = src[pixelIndex + 0];
@@ -198,7 +206,7 @@ CJellyFormatImageError cjelly_format_image_bmp_load(const char * filename, CJell
   bmpImage->base.raw->bitdepth = infoHeader.biBitCount == 32 ? 32 : 24;
   int rowSize = calcRowSize(width, infoHeader.biBitCount);
   size_t dataSize = width * height * bmpImage->base.raw->channels;
-  
+
   // Allocate and zero out memory for the raw image data.
   bmpImage->base.raw->data = (unsigned char *)malloc(dataSize);
   if (!bmpImage->base.raw->data) {
@@ -323,23 +331,23 @@ CJellyFormatImageError cjelly_format_image_bmp_load(const char * filename, CJell
     unsigned int x = 0, y = 0;
     while (y < height) {
       // Process a row.
-      
+
       // Read the RLE pair.
       int count = fgetc(fp);
       if (count == EOF) {
         err = CJELLY_FORMAT_IMAGE_ERR_IO;
         goto ERROR_FREE_PALETTE;
-      }  
+      }
       int value = fgetc(fp);
       if (value == EOF) {
         err = CJELLY_FORMAT_IMAGE_ERR_IO;
         goto ERROR_FREE_PALETTE;
       }
-      
+
       // Rows are flipped vertically.
       int destRow = topDown ? y : ((height - 1) - y);
       int destOffset = destRow * width * 3;
-  
+
       // Process the RLE pair.
       if (count) {
         // `count` is greater than zero, so this is Encoded mode.
@@ -520,31 +528,31 @@ void cjelly_format_image_bmp_dump(const CJellyFormatImageBMP * imageBmp) {
   printf("Data Size: %zu bytes\n", image->raw->data_size);
   printf("\n");
 
-  int width = image->raw->width;
-  int height = image->raw->height;
-  int channels = image->raw->channels;
+  // int width = image->raw->width;
+  // int height = image->raw->height;
+  // int channels = image->raw->channels;
 
   // Dump pixel data.
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
-      int idx = (y * width + x) * channels;
-      if (channels == 3) {
-        // Print in RRGGBB format.
-        printf("%02X%02X%02X ", image->raw->data[idx],
-          image->raw->data[idx + 1],
-          image->raw->data[idx + 2]);
-    }
-    else if (channels == 4) {
-        // Print in RRGGBBAA format.
-        printf("%02X%02X%02X%02X ", image->raw->data[idx],
-          image->raw->data[idx + 1],
-          image->raw->data[idx + 2],
-          image->raw->data[idx + 3]);
-      }
-      else {
-          printf("?? ");
-      }
-    }
-    printf("\n");
-  }
+  // for (int y = 0; y < height; ++y) {
+  //   for (int x = 0; x < width; ++x) {
+  //     int idx = (y * width + x) * channels;
+  //     if (channels == 3) {
+  //       // Print in RRGGBB format.
+  //       printf("%02X%02X%02X ", image->raw->data[idx],
+  //         image->raw->data[idx + 1],
+  //         image->raw->data[idx + 2]);
+  //   }
+  //   else if (channels == 4) {
+  //       // Print in RRGGBBAA format.
+  //       printf("%02X%02X%02X%02X ", image->raw->data[idx],
+  //         image->raw->data[idx + 1],
+  //         image->raw->data[idx + 2],
+  //         image->raw->data[idx + 3]);
+  //     }
+  //     else {
+  //         printf("?? ");
+  //     }
+  //   }
+  //   printf("\n");
+  // }
 }

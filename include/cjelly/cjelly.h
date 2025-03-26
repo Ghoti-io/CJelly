@@ -592,6 +592,8 @@ void initVulkanGlobal(void);
 void cleanupVulkanGlobal(void);
 
 
+void createTexturedCommandBuffersForWindow(CJellyWindow * win);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

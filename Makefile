@@ -198,8 +198,10 @@ $(OBJ_DIR)/format/image/bmp.o: \
 
 $(OBJ_DIR)/cjelly.o: \
 	src/cjelly.c \
+	$(DEP_FORMAT_IMAGE) \
 	$(GEN_DIR)/shaders/basic.vert.h \
 	$(GEN_DIR)/shaders/basic.frag.h \
+	$(GEN_DIR)/shaders/textured.frag.h \
 	$(DEP_CJELLY)
 
 
